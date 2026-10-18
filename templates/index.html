@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home – FinFlow</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="index.html"><span class="brand-mark"></span>FinFlow</a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="index.html" aria-current="page">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="sales_flow.html">Sales flow</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section class="hero">
+      <h1>FinMaster fulfilment, from order to courier</h1>
+      <p>Fintr plans to grow FinMaster sales from about 32 to more than 500 units a month
+        over the next 18 months. FinFlow brings order intake, packing, courier costs and
+        dispatch into one place, so one person can keep up.</p>
+    </section>
+
+    <section class="card-grid" aria-label="Main tools">
+      <article class="nav-card">
+        <h2>Supply chain dashboard</h2>
+        <p>Check the recommended order quantity, reorder point and stock levels, and see
+          the courier cost of every outbound order.</p>
+        <a class="btn" href="dashboard.html">Open dashboard</a>
+      </article>
+
+      <article class="nav-card">
+        <h2>Sales flow tracker</h2>
+        <p>Move Takealot orders through the 7 fulfilment steps, from purchase order to
+          dispatch.</p>
+        <a class="btn" href="sales_flow.html">Open tracker</a>
+      </article>
+    </section>
+
+    <section aria-labelledby="today-heading">
+      <h2 id="today-heading">Warehouse today</h2>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <p class="stat-label">Stock on hand</p>
+          <p class="stat-value">500 <small>units</small></p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Safety buffer</p>
+          <p class="stat-value">50 <small>units</small></p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Reorder point</p>
+          <p class="stat-value">170 <small>units</small></p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Orders in progress</p>
+          <p class="stat-value">4 <small>orders</small></p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>FinFlow is a BFB 321 project by Group 28 for Fintr. All orders shown are synthetic demo data.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
