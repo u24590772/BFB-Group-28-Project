@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales flow – FinFlow</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="index.html"><span class="brand-mark"></span>FinFlow</a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="sales_flow.html" aria-current="page">Sales flow</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <div class="page-intro">
+      <h1>Sales flow tracker</h1>
+      <p>Takealot orders move through 7 steps, from purchase order to dispatch. When you
+        finish the next action for an order, select Advance step.</p>
+    </div>
+
+    <!-- Pipeline stage legend: the 7 steps of Sales Flow.png -->
+    <section aria-labelledby="board-heading">
+      <h2 id="board-heading">Where orders are now</h2>
+      <p class="section-note">Colour shows the system where the work happens:
+        Websupplier, ERPNext or Courier Guy.</p>
+
+      <ol class="track">
+        <li class="track-step on-websupplier">
+          <span class="track-number">1</span>
+          <span class="track-name">Takealot PO Created
+            <span class="track-platform">Websupplier</span></span>
+          <span class="track-count">No orders</span>
+        </li>
+        <li class="track-step on-websupplier">
+          <span class="track-number">2</span>
+          <span class="track-name">Fintr Confirms on Websupplier
+            <span class="track-platform">Websupplier</span></span>
+          <span class="track-count">No orders</span>
+        </li>
+        <li class="track-step on-erp">
+          <span class="track-number">3</span>
+          <span class="track-name">Sales Order on ERPNext
+            <span class="track-platform">ERPNext</span></span>
+          <span class="track-count">No orders</span>
+        </li>
+        <li class="track-step on-erp">
+          <span class="track-number">4</span>
+          <span class="track-name">Delivery Note on ERPNext
+            <span class="track-platform">ERPNext</span></span>
+          <span class="track-count">No orders</span>
+        </li>
+        <li class="track-step on-websupplier">
+          <span class="track-number">5</span>
+          <span class="track-name">Shipment on Websupplier
+            <span class="track-platform">Websupplier</span></span>
+          <span class="track-count">No orders</span>
+        </li>
+        <li class="track-step on-courier">
+          <span class="track-number">6</span>
+          <span class="track-name">Shipment on Courier Guy
+            <span class="track-platform">Courier Guy</span></span>
+          <span class="track-count">No orders</span>
+        </li>
+        <li class="track-step on-done">
+          <span class="track-number">7</span>
+          <span class="track-name">Dispatched
+            <span class="track-platform">Done</span></span>
+          <span class="track-count">No orders</span>
+        </li>
+      </ol>
+    </section>
+
+    <!-- Order audit table: data-step holds each order's current step (1 to 7) -->
+    <section aria-labelledby="audit-heading">
+      <h2 id="audit-heading">Order audit</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Order ID</th>
+              <th scope="col">Channel</th>
+              <th scope="col" class="num">Quantity</th>
+              <th scope="col">Current stage</th>
+              <th scope="col">Next action required</th>
+              <th scope="col">Action</th>
+            </tr>
+          </thead>
+          <tbody id="flow-body">
+            <tr data-step="1">
+              <td>DEMO-ORD-001</td>
+              <td>Takealot</td>
+              <td class="num">1</td>
+              <td><span class="badge"></span></td>
+              <td class="next-action"></td>
+              <td><button type="button" class="btn btn-small advance-btn">Advance step</button></td>
+            </tr>
+            <tr data-step="3">
+              <td>DEMO-ORD-002</td>
+              <td>Takealot</td>
+              <td class="num">8</td>
+              <td><span class="badge"></span></td>
+              <td class="next-action"></td>
+              <td><button type="button" class="btn btn-small advance-btn">Advance step</button></td>
+            </tr>
+            <tr data-step="5">
+              <td>DEMO-ORD-004</td>
+              <td>Takealot</td>
+              <td class="num">4</td>
+              <td><span class="badge"></span></td>
+              <td class="next-action"></td>
+              <td><button type="button" class="btn btn-small advance-btn">Advance step</button></td>
+            </tr>
+            <tr data-step="2">
+              <td>DEMO-ORD-006</td>
+              <td>Takealot</td>
+              <td class="num">6</td>
+              <td><span class="badge"></span></td>
+              <td class="next-action"></td>
+              <td><button type="button" class="btn btn-small advance-btn">Advance step</button></td>
+            </tr>
+            <tr data-step="7">
+              <td>DEMO-ORD-007</td>
+              <td>Takealot</td>
+              <td class="num">12</td>
+              <td><span class="badge"></span></td>
+              <td class="next-action"></td>
+              <td><button type="button" class="btn btn-small advance-btn">Advance step</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="flow-status" class="flow-status" role="status"></p>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>FinFlow is a BFB 321 project by Group 28 for Fintr. All orders shown are synthetic demo data.</p>
+    </div>
+  </footer>
+
+  <script src="../js/sales_flow.js"></script>
+</body>
+</html>
