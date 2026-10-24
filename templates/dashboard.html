@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – FinFlow</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="index.html"><span class="brand-mark"></span>FinFlow</a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html" aria-current="page">Dashboard</a>
+        <a href="sales_flow.html">Sales flow</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <div class="page-intro">
+      <h1>Supply chain dashboard</h1>
+      <p>Stock and shipping figures for FinMaster (SKU FM-2026-CN), worked out by the
+        supply chain model.</p>
+    </div>
+
+    <!-- Top section: outputs of Calculation 1 (EOQ) and Calculation 3 (stock) -->
+    <section aria-labelledby="stock-heading">
+      <h2 id="stock-heading">Stock and reordering</h2>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <p class="stat-label">Recommended order quantity (EOQ)</p>
+          <p class="stat-value"><span id="eoq-value">306</span> <small>units</small></p>
+          <p class="stat-note">About 20 orders a year. Yearly ordering and holding cost: R&nbsp;13&nbsp;748.</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Reorder point</p>
+          <p class="stat-value"><span id="rop-value">170</span> <small>units</small></p>
+          <p class="stat-note">5 days of demand at 24 units a day, plus the safety buffer.</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Stock on hand</p>
+          <p class="stat-value"><span id="stock-value">500</span> <small>units</small></p>
+          <p class="stat-note">330 units above the reorder point.</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Safety buffer</p>
+          <p class="stat-value"><span id="buffer-value">50</span> <small>units</small></p>
+          <p class="stat-note"><span class="badge badge-ok">Healthy</span></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom section: outputs of Calculation 2 (courier shipping cost) -->
+    <section aria-labelledby="orders-heading">
+      <h2 id="orders-heading">Outbound orders and courier costs</h2>
+      <p class="section-note">Up to 4 games fit in one master carton. Courier Guy road
+        freight: R 120 for the first 5 kg, R 8.50 per extra kg, plus 15%.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Order ID</th>
+              <th scope="col">Channel</th>
+              <th scope="col" class="num">Units</th>
+              <th scope="col" class="num">Cartons</th>
+              <th scope="col" class="num">Billable weight</th>
+              <th scope="col" class="num">Shipping cost</th>
+              <th scope="col">Stock status</th>
+            </tr>
+          </thead>
+          <tbody id="orders-body">
+            <tr>
+              <td>DEMO-ORD-001</td>
+              <td>Takealot</td>
+              <td class="num">1</td>
+              <td class="num">1</td>
+              <td class="num">7.80 kg</td>
+              <td class="num">R 165.37</td>
+              <td><span class="badge badge-ok">Approved</span></td>
+            </tr>
+            <tr>
+              <td>DEMO-ORD-002</td>
+              <td>Takealot</td>
+              <td class="num">8</td>
+              <td class="num">2</td>
+              <td class="num">15.60 kg</td>
+              <td class="num">R 241.62</td>
+              <td><span class="badge badge-ok">Approved</span></td>
+            </tr>
+            <tr>
+              <td>DEMO-ORD-003</td>
+              <td>Shopify</td>
+              <td class="num">2</td>
+              <td class="num">1</td>
+              <td class="num">7.80 kg</td>
+              <td class="num">R 165.37</td>
+              <td><span class="badge badge-ok">Approved</span></td>
+            </tr>
+            <tr>
+              <td>DEMO-ORD-004</td>
+              <td>Takealot</td>
+              <td class="num">4</td>
+              <td class="num">1</td>
+              <td class="num">7.80 kg</td>
+              <td class="num">R 165.37</td>
+              <td><span class="badge badge-ok">Approved</span></td>
+            </tr>
+            <tr>
+              <td>DEMO-ORD-005</td>
+              <td>Direct email</td>
+              <td class="num">10</td>
+              <td class="num">3</td>
+              <td class="num">23.40 kg</td>
+              <td class="num">R 317.86</td>
+              <td><span class="badge badge-ok">Approved</span></td>
+            </tr>
+            <tr>
+              <td>DEMO-ORD-006</td>
+              <td>Takealot</td>
+              <td class="num">6</td>
+              <td class="num">2</td>
+              <td class="num">15.60 kg</td>
+              <td class="num">R 241.62</td>
+              <td><span class="badge badge-ok">Approved</span></td>
+            </tr>
+            <tr>
+              <td>DEMO-ORD-007</td>
+              <td>Takealot</td>
+              <td class="num">12</td>
+              <td class="num">3</td>
+              <td class="num">23.40 kg</td>
+              <td class="num">R 317.86</td>
+              <td><span class="badge badge-ok">Approved</span></td>
+            </tr>
+            <tr class="is-breach">
+              <td>DEMO-ORD-008</td>
+              <td>Direct email</td>
+              <td class="num">460</td>
+              <td class="num">115</td>
+              <td class="num">897.00 kg</td>
+              <td class="num">R 8 857.30</td>
+              <td><span class="badge badge-breach">Buffer breach</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>FinFlow is a BFB 321 project by Group 28 for Fintr. All orders shown are synthetic demo data.</p>
+    </div>
+  </footer>
+
+</body>
+</html>

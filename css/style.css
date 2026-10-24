@@ -1,0 +1,444 @@
+/* =========================================================
+   FinFlow – shared stylesheet for all three pages
+   BFB 321 Group 28 – Member 3 (Frontend UI)
+   ========================================================= */
+
+/* ---------- 1. Design tokens (colours and fonts) ---------- */
+:root {
+  --ink: #1E2B3C;        /* text, navigation bar, board outlines */
+  --concrete: #EDEFEA;   /* page background (warehouse floor) */
+  --label: #FFFFFF;      /* cards and tables (shipping-label white) */
+  --line: #C9CFC8;       /* thin borders */
+  --muted: #556170;      /* secondary text */
+  --kraft: #A0672E;      /* carton brown */
+  --kraft-light: #D2A673;
+
+  /* One colour per system where the work happens */
+  --websupplier: #2B6CB0;  --websupplier-tint: #DCE9F7;  --websupplier-text: #1A4A80;
+  --erp: #6B4FA0;          --erp-tint: #E8E1F4;          --erp-text: #4A3375;
+  --courier: #A0672E;      --courier-tint: #F3E6D6;      --courier-text: #6E4318;
+  --done: #2F7A4D;         --done-tint: #DDEFE3;         --done-text: #1F5A37;
+  --breach-tint: #F8DEDB;  --breach-text: #9B1C1C;
+
+  --font-body: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --font-head: "Barlow Semi Condensed", "Barlow", "Segoe UI", system-ui, sans-serif;
+}
+
+/* ---------- 2. Base styles ---------- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--concrete);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+h1, h2 {
+  font-family: var(--font-head);
+  line-height: 1.15;
+  margin: 0 0 0.5rem;
+}
+
+h1 { font-size: 2rem; font-weight: 700; }
+h2 { font-size: 1.375rem; font-weight: 600; }
+
+p {
+  margin: 0 0 1rem;
+  max-width: 68ch;
+}
+
+a { color: var(--ink); }
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--websupplier);
+  outline-offset: 2px;
+}
+
+.container {
+  width: 100%;
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+main {
+  padding-top: 32px;
+  padding-bottom: 48px;
+}
+
+section {
+  margin-bottom: 40px;
+}
+
+/* ---------- 3. Header and navigation (Flexbox) ---------- */
+.site-header {
+  background: var(--ink);
+}
+
+.site-header .container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #FFFFFF;
+  font-family: var(--font-head);
+  font-size: 1.375rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* A taped carton seen from above */
+.brand-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  background: linear-gradient(90deg,
+    var(--kraft) 40%, var(--kraft-light) 40%,
+    var(--kraft-light) 60%, var(--kraft) 60%);
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.site-nav a {
+  color: #D5DCE4;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-bottom: 3px solid transparent;
+}
+
+.site-nav a:hover {
+  color: #FFFFFF;
+}
+
+.site-nav a[aria-current="page"] {
+  color: #FFFFFF;
+  border-bottom-color: var(--kraft-light);
+}
+
+.site-header a:focus-visible {
+  outline-color: var(--kraft-light);
+}
+
+/* ---------- 4. Page headings ---------- */
+.hero {
+  padding-top: 16px;
+}
+
+.hero h1 {
+  font-size: 2.25rem;
+  max-width: 20ch;
+}
+
+.page-intro {
+  margin-bottom: 32px;
+}
+
+.page-intro p,
+.hero p,
+.section-note {
+  color: var(--muted);
+  font-size: 1.0625rem;
+}
+
+/* ---------- 5. Cards (Grid, mobile first) ---------- */
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.nav-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: var(--label);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 24px;
+}
+
+.nav-card p {
+  color: var(--muted);
+  flex-grow: 1;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.stat-card {
+  background: var(--label);
+  border-top: 4px solid var(--ink);
+  border-radius: 0 0 6px 6px;
+  padding: 14px 16px 16px;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-family: var(--font-head);
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.stat-value small {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.stat-note {
+  color: var(--muted);
+  font-size: 0.875rem;
+  margin: 8px 0 0;
+}
+
+/* ---------- 6. Buttons and badges ---------- */
+.btn {
+  display: inline-block;
+  background: var(--ink);
+  color: #FFFFFF;
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 4px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #34485F;
+}
+
+.btn:disabled {
+  background: var(--concrete);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-ok     { background: var(--done-tint);   color: var(--done-text); }
+.badge-breach { background: var(--breach-tint); color: var(--breach-text); }
+
+/* Stage colour = the system where that step happens */
+.stage-1, .stage-2, .stage-5 { background: var(--websupplier-tint); color: var(--websupplier-text); }
+.stage-3, .stage-4           { background: var(--erp-tint);         color: var(--erp-text); }
+.stage-6                     { background: var(--courier-tint);     color: var(--courier-text); }
+.stage-7                     { background: var(--done-tint);        color: var(--done-text); }
+
+/* ---------- 7. Tables ---------- */
+.table-wrap {
+  overflow-x: auto;   /* wide tables scroll sideways on phones */
+  background: var(--label);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+th, td {
+  padding: 12px 16px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--line);
+}
+
+th {
+  font-family: var(--font-head);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border-bottom: 2px solid var(--ink);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+td:first-child {          /* the Order ID column */
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.is-breach td {
+  background: #FDF3F2;
+}
+
+/* ---------- 8. Sales flow board (the 7-step track) ---------- */
+.track {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  background: var(--label);
+  border: 2px solid var(--ink);
+}
+
+/* Each square picks its colour from the system it belongs to */
+.on-websupplier { --platform: var(--websupplier); }
+.on-erp         { --platform: var(--erp); }
+.on-courier     { --platform: var(--courier); }
+.on-done        { --platform: var(--done); }
+
+/* Phones: a vertical path with the colour band on the left */
+.track-step {
+  display: grid;
+  grid-template-columns: 2.25rem 1fr auto;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 12px 14px;
+  border-left: 8px solid var(--platform);
+  border-bottom: 2px solid var(--ink);
+}
+
+.track-step:last-child {
+  border-bottom: none;
+}
+
+.track-number {
+  font-family: var(--font-head);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.track-name {
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.track-platform {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.track-count {
+  justify-self: end;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #FFFFFF;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.track-count.is-empty {
+  background: transparent;
+  color: var(--muted);
+  font-weight: 400;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.flow-status {
+  min-height: 1.5em;
+  margin-top: 12px;
+  font-weight: 600;
+}
+
+/* ---------- 9. Footer ---------- */
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding: 20px 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+/* ---------- 10. Bigger screens (media queries) ---------- */
+@media (min-width: 600px) {
+  h1 { font-size: 2.5rem; }
+  .hero h1 { font-size: 3.25rem; }
+}
+
+@media (min-width: 700px) {
+  .card-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 900px) {
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
+
+  /* Desktop: the 7 squares sit side by side like a game board */
+  .track { grid-template-columns: repeat(7, 1fr); }
+
+  .track-step {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    align-items: start;
+    min-height: 190px;
+    border-left: none;
+    border-bottom: none;
+    border-top: 8px solid var(--platform);
+    border-right: 2px solid var(--ink);
+  }
+
+  .track-step:last-child {
+    border-right: none;
+  }
+
+  .track-count {
+    justify-self: start;
+    align-self: end;
+  }
+}
