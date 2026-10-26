@@ -90,7 +90,7 @@ VAT_RATE = 0.15
 
 # - SAFETY STOCK PARAMETERS
 DEMAND_STD_DEV_PER_DAY = 10
-LEAD_TIME_STD_DEV_DAYS = 2
+LEAD_TIME_DAYS = 5
 SERVICE_LEVEL = 0.95
 
 # ===========================================================================
