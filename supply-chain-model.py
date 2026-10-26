@@ -120,7 +120,6 @@ def eoq(
         annual_demand (float): The annual demand for the SKU.
         setup_cost (float): The fixed cost per order.
         holding_cost (float): The holding cost per unit per year.
-
     Returns:
         float: The optimal order quantity (EOQ).
     """
