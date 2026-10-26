@@ -23,9 +23,6 @@ from supply_chain_model import (
     calculate_eoq,
     calculate_safety_stock,
     check_stock_reservation,
-    daily_demand,
-    demand_std_dev,
-    economic_order_quantity,
     orders_per_year,
     reorder_point,
     total_annual_cost,
@@ -56,9 +53,6 @@ holding_cost_result = annual_holding_cost(306, 45, 50)
 
 # Total annual cost with safety stock: 6 862.75 + 9 135.00 = R 15 997.75
 total_cost_result = total_annual_cost(6000, 306, 350, 45, 50)
-
-# Daily demand: 6000 / 250 = 24 units/day
-daily_demand_result = daily_demand(6000, 250)
 
 # z-score for a 95 % service level (z-table): 1.645
 z_score_result = z_score(0.95)
@@ -113,22 +107,22 @@ tracker_reorder_result = track_inventory_level(200, [10, 10, 10, 8])
 # SHOW THE STORED RESULTS
 # ==============================================================================
 
-print("Calculation 1 - EOQ, safety stock and reorder point")
-print("  calculate_eoq:", eoq_result)
-print("  orders_per_year:", orders_per_year_result)
-print("  annual_ordering_cost:", ordering_cost_result)
-print("  annual_holding_cost:", holding_cost_result)
-print("  total_annual_cost:", total_cost_result)
-print("  calculate_safety_stock (95 %):", safety_stock_result)
-print("  reorder_point:", reorder_point_result)
+print("Calculation 1 - EOQ, safety stock and reorder point", "\n")
+print("  calculate_eoq:", eoq_result, "\n")
+print("  orders_per_year:", orders_per_year_result, "\n")
+print("  annual_ordering_cost:", ordering_cost_result, "\n")
+print("  annual_holding_cost:", holding_cost_result, "\n")
+print("  total_annual_cost:", total_cost_result, "\n")
+print("  calculate_safety_stock (95 %):", safety_stock_result, "\n")
+print("  reorder_point:", reorder_point_result, "\n\n")
 
-print("Calculation 2 - cartons and Courier Guy shipping cost")
-print("  calculate_carton_breakdown (8 units):", cartons_8_result)
-print("  calculate_courier_shipping_cost (8 units):", shipping_8_result)
+print("Calculation 2 - cartons and Courier Guy shipping cost", "\n")
+print("  calculate_carton_breakdown (8 units):", cartons_8_result, "\n")
+print("  calculate_courier_shipping_cost (8 units):", shipping_8_result, "\n\n")
 
-print("Calculation 3 - stock reservation")
-print("  check_stock_reservation (8 units):", reservation_8_result)
-print("  check_stock_reservation (451 units):", reservation_451_result)
+print("Calculation 3 - stock reservation", "\n")
+print("  check_stock_reservation (8 units):", reservation_8_result, "\n")
+print("  check_stock_reservation (451 units):", reservation_451_result, "\n\n")
 
 print("Inventory tracking")
 print("  track_inventory_level (500 on hand):", tracker_result)
