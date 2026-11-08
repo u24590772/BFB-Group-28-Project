@@ -394,6 +394,8 @@ td:first-child {          /* the Order ID column */
   font-weight: 600;
 }
 
+.flow-status.is-error { color: var(--breach-text);}
+
 /* ---------- 9. Footer ---------- */
 .site-footer {
   border-top: 1px solid var(--line);
