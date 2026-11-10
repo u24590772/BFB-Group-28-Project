@@ -69,6 +69,8 @@ BFB-Group-28-Project/
 
 The database is normalized to **Third Normal Form (3NF)** and hosted on a managed **Aiven Cloud MySQL** cluster.
 
+![FinFlow MySQL Entity Relationship Diagram (ERD)](database/erd.png)
+
 ```mermaid
 erDiagram
     INVENTORY ||--o{ ORDERS : "contains SKU"
