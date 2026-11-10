@@ -2,9 +2,7 @@
 
 **Course:** BFB 321 — Supply Chain Digital Technologies  
 **Academic Year:** 2026  
-**Group:** Group 28  
-**Client Project:** Fintr (FinMaster Board Game `FM-2026-CN`)  
-**Stack:** Flask Backend • MySQL (Aiven Cloud) • HTML5/CSS3/Bootstrap • Standalone Supply Chain Model  
+**Group:** Group 28   
 
 ---
 
@@ -12,21 +10,21 @@
 
 | Student Name | Student Number | GitHub Username | Allocated Project Responsibilities (Rubric B6.4) |
 | :--- | :--- | :--- | :--- |
-| **Zaid Varachia** | u24590772 | u24590772 | Step 3 (MySQL Data Model, Cloud DB), Step 4 (Flask REST API, CRUD, Transactions, Error Handlers), Step 6 (Config & Runbook) |
-| **Mulanga Dau** | u22678884 | u22678884 | Step 2 (Standalone Python Supply Chain Model, EOQ/ROP, Carton Volumetric Calculation, Pytest Unit Tests) |
-| **Nicolas Mthombeni** | u22683552 | u22683552 | Step 1 (Frontend HTML5/CSS3/Bootstrap UI, Templates, Responsive Card Grids, DOM Stage Transitions in `sales_flow.js`) |
+| **Zaid Varachia** | u24590772 | u24590772 | MySQL Data Model, Flask REST API, CRUD |
+| **Mulanga Dau** | u22678884 | u22678884 | Standalone Python Supply Chain Model, EOQ/ROP, Carton Volumetric Calculation, Pytest Unit Tests |
+| **Nicolas Mthombeni** | u22683552 | Nicolas-techni | Frontend HTML/CSS3 Templates, Responsive Card Grids, DOM Stage Transitions in `sales_flow.js`) |
 
 ---
 
 ## 2. Project Background & System Overview
 
-**Fintr** manufactures and distributes **FinMaster** (`FM-2026-CN`), a South African financial education board game. As monthly sales scale from 32 units to over 500 units, administrative bottlenecks and manual transcription errors between Takealot Websupplier, ERPNext, and The Courier Guy risk parcel delays and costly reverse logistics.
+Fintr manufactures and distributes FinMaster, a South African financial education board game. As monthly sales scale from 32 units to over 500 units, administrative bottlenecks and manual transcription errors between the Takealot Websupplier, ERPNext, and The Courier Guy risk parcel delays and costly reverse logistics.
 
-**FinFlow** provides a unified fulfilment workspace that:
-1. Replaces disjointed multi-portal data entry with an automated **7-Stage Takealot Sales Flow Tracker**.
-2. Applies the standalone **Economic Order Quantity (EOQ)** and **Reorder Point (ROP)** model against live inventory.
-3. Automatically computes **master carton splits** (max 4 games/carton) and **Courier Guy volumetric road-freight tariffs**.
-4. Guarantees inventory integrity via **atomic MySQL transactions** with safety stock buffer enforcement.
+We created a web solution that:
+1. Replaces disjointed multi-portal data entry with an automated 7-Stage Takealot Sales Flow Tracker.
+2. Applies the standalone Economic Order Quantity (EOQ) and Reorder Point (ROP) model against live inventory.
+3. Automatically computes master carton splits (max 4 games/carton) and Courier Guy volumetric road-freight tariffs.
+4. Guarantees inventory integrity via atomic MySQL transactions with safety stock buffer enforcement.
 
 ---
 
@@ -67,51 +65,12 @@ BFB-Group-28-Project/
 
 ## 4. Database Design & Entity Relationship Diagram (ERD)
 
-The database is normalized to **Third Normal Form (3NF)** and hosted on a managed **Aiven Cloud MySQL** cluster.
+The database is normalized to Third Normal Form (3NF) and hosted on a managed Aiven Cloud MySQL cluster.
 
 ![FinFlow MySQL Entity Relationship Diagram (ERD)](database/erd.png)
 
-```mermaid
-erDiagram
-    INVENTORY ||--o{ ORDERS : "contains SKU"
-    ORDERS ||--o{ CARTONS : "packed into"
 
-    INVENTORY {
-        varchar(30) item_code PK
-        varchar(120) item_name
-        int stock_on_hand
-        int safety_stock
-        int reorder_point
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    ORDERS {
-        int id PK
-        varchar(30) order_ref UK
-        varchar(50) channel
-        varchar(30) item_code FK
-        int quantity
-        int step
-        varchar(30) status
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    CARTONS {
-        int id PK
-        int order_id FK
-        int carton_number
-        int units_packed
-        decimal actual_weight_kg
-        decimal volumetric_weight_kg
-        decimal billable_weight_kg
-        varchar(50) waybill_number UK
-        timestamp packed_at
-    }
-```
-
-### Key Schema Characteristics (Rubric B1.1):
+### Key Schema Characteristics:
 - **Foreign Key Constraints:** `orders.item_code -> inventory.item_code` (`ON UPDATE CASCADE`), `cartons.order_id -> orders.id` (`ON DELETE CASCADE`).
 - **Data Integrity Constraints:**
   - Non-negative stock: `CHECK (stock_on_hand >= 0)`
@@ -143,7 +102,7 @@ All API endpoints return consistent JSON responses with appropriate HTTP status 
 
 ## 6. Installation & Execution Runbook (Rubric B4.1)
 
-Follow these exact steps on any machine with Python 3.8+ installed:
+Follow these steps on a computer with Python 3.8+ installed:
 
 ### Step 1: Clone Repository
 ```bash
@@ -182,7 +141,7 @@ DB_NAME=defaultdb
 FLASK_ENV=development
 ```
 
-### Step 5: Provision Database & Seed Demo Data (Rubric B1.3)
+### Step 5: Provision Database & Seed Demo Data
 Run the automated initialization script to build tables and insert 8 realistic demo orders:
 ```bash
 python init_db.py --reset
@@ -205,7 +164,7 @@ pytest -v
 
 ---
 
-## 7. Database Operations, Backup & Rollback (Rubric B4.3)
+## 7. Database Operations, Backup & Rollback
 
 ### Database Backup
 To produce a full logical SQL backup from Aiven Cloud MySQL:
@@ -225,5 +184,5 @@ To reset tables back to clean examination seed data at any time:
 python init_db.py --reset
 ```
 
-### Transaction Rollback Strategy (Rubric B2.5)
+### Transaction Rollback Strategy
 All state-modifying actions (`pack_order_transaction` and `advance_order_transaction`) are wrapped in strict `try ... except` blocks with database row locks (`SELECT ... FOR UPDATE`). If any step fails (such as insufficient stock, constraint violation, or duplicate waybill), `conn.rollback()` is immediately executed, leaving MySQL in an uncorrupted state.
