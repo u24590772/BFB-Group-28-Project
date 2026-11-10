@@ -73,6 +73,7 @@ def test_pages_load(client):
 def test_stylesheet_and_script_are_served(client):
     assert client.get("/static/css/style.css").status_code == 200
     assert client.get("/static/js/sales_flow.js").status_code == 200
+    assert client.get("/static/js/dashboard.js").status_code == 200
 
 
 def test_dashboard_shows_the_model_results(client):
@@ -82,6 +83,9 @@ def test_dashboard_shows_the_model_results(client):
     assert "R 241.62" in html                  # 8 units in 2 cartons
     assert "R 8 857.30" in html                # 460 units in 115 cartons
     assert "Buffer breach" in html             # DEMO-ORD-008 is over the safety buffer
+    # Verify interactive tools are rendered on screen (Rubric B3.1)
+    assert 'id="order-form"' in html
+    assert 'id="calc-form"' in html
 
 
 # ---------------------------------------------------------------------------

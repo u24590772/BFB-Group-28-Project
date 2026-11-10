@@ -44,6 +44,56 @@
     </div>
   </section>
 
+  <!-- Interactive Fulfilment Tools: Flow 2 & Flow 3 (Rubric B3.1) -->
+  <section aria-labelledby="tools-heading">
+    <h2 id="tools-heading">Fulfilment and shipping tools</h2>
+    <div class="card-grid">
+      <!-- Tool 1: Order Intake Form (Flow 2) -->
+      <article class="tool-card">
+        <h3>New order intake</h3>
+        <p>Create an outbound order. The system checks stock against the 50-unit safety buffer before reserving.</p>
+        <form id="order-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="order-ref">Order reference</label>
+              <input type="text" id="order-ref" class="form-control" placeholder="e.g. ORD-101" required>
+            </div>
+            <div class="form-group">
+              <label for="order-channel">Channel</label>
+              <select id="order-channel" class="form-control">
+                <option value="Takealot">Takealot</option>
+                <option value="Shopify">Shopify</option>
+                <option value="Direct email">Direct email</option>
+              </select>
+            </div>
+            <div class="form-group" style="max-width: 100px;">
+              <label for="order-qty">Units</label>
+              <input type="number" id="order-qty" class="form-control num" min="1" max="1000" placeholder="8" required>
+            </div>
+            <button type="submit" class="btn btn-small" id="submit-order-btn">Create order</button>
+          </div>
+        </form>
+        <p id="order-feedback" class="flow-status" role="status" style="margin-bottom: 0;"></p>
+      </article>
+
+      <!-- Tool 2: Master Carton & Shipping Calculator (Flow 3) -->
+      <article class="tool-card">
+        <h3>Courier freight calculator</h3>
+        <p>Simulate master carton splits (max 4/box) and Courier Guy road-freight tariffs for any order size.</p>
+        <form id="calc-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="calc-qty">Order quantity (units)</label>
+              <input type="number" id="calc-qty" class="form-control num" min="1" max="1000" placeholder="e.g. 10" required>
+            </div>
+            <button type="submit" class="btn btn-small" id="calc-btn">Calculate shipping</button>
+          </div>
+        </form>
+        <div id="calc-results" class="calc-box" style="display: none;"></div>
+      </article>
+    </div>
+  </section>
+
   <!-- Bottom section: outputs of Calculation 2 (courier shipping cost) -->
   <section aria-labelledby="orders-heading">
     <h2 id="orders-heading">Outbound orders and courier costs</h2>
@@ -80,7 +130,7 @@
               </td>
             </tr>
           {% else %}
-            <tr>
+            <tr id="no-orders-row">
               <td colspan="7">No orders yet.</td>
             </tr>
           {% endfor %}
@@ -88,4 +138,8 @@
       </table>
     </div>
   </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}
