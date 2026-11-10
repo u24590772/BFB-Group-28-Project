@@ -7,9 +7,9 @@
 
 ---
 
-## 1. Team Members & Task Allocation (Rubric B6)
+## 1. Team Members & Task Allocation
 
-| Student Name | Student Number | GitHub Username | Allocated Project Responsibilities (Rubric B6.4) |
+| Student Name | Student Number | GitHub Username | Allocated Project Responsibilities |
 | :--- | :--- | :--- | :--- |
 | **Zaid Varachia** | u24590772 | `u24590772` | **Data Model & Backend API:** MySQL 3NF schema, Aiven Cloud DB, Flask REST API CRUD, transactions (`FOR UPDATE`, rollback), runbook. |
 | **Mulanga Dau** | u22678884 | `u22678884` | **Supply Chain Algorithms & Testing:** Pure Python model (`models/supply_chain.py`), EOQ/ROP, volumetric packaging logic, Pytest suite. |
@@ -69,7 +69,7 @@ The application provides three complete, interactive user flows across the brows
 
 ---
 
-## 6. Installation & Execution Runbook (Rubric B4)
+## 6. Installation & Execution Runbook
 
 Follow these steps to run the application on any computer with Python 3.8+:
 
@@ -112,7 +112,7 @@ pytest -v
 
 ---
 
-## 7. Database Operations, Backup & Rollback (Rubric B4.3)
+## 7. Database Operations, Backup & Rollback
 
 * **Logical Backup:**
   ```bash
