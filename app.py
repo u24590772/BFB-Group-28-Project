@@ -1,24 +1,3 @@
-"""
-FinFlow – Flask Web Application & REST API
-==========================================
-BFB 321 – Group 28
-
-Connects the responsive frontend templates to the standalone supply chain model
-and the Aiven Cloud MySQL database.
-
-Fulfills Rubric:
-- B1.4: Connected to live MySQL with parameterized queries and model-matching schemas
-- B2.1: Resource-style REST API endpoints returning consistent JSON
-- B2.2: Full CRUD capabilities (Create, Read, Update) on Orders
-- B2.4: Pagination, filtering, and bad input validation
-- B2.5: Centralized error handling and Python logging (no raw stack traces)
-- B3.1–B3.3: 3 end-to-end flows with dynamic frontend updates and supply chain KPIs
-
-Run from the project folder:
-    python app.py
-Then open http://127.0.0.1:5000 in your browser.
-"""
-
 import logging
 import os
 from flask import Flask, abort, jsonify, render_template, request
@@ -31,39 +10,28 @@ from models.supply_chain import (
     calculate_courier_shipping_cost,
 )
 
-# ---------------------------------------------------------------------------
-# Logging Configuration (Rubric B2.5 & B4.4)
-# ---------------------------------------------------------------------------
+# Logging Configuration
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger("finflow")
 
-# ---------------------------------------------------------------------------
 # Flask App Factory & Database Teardown Hook
-# ---------------------------------------------------------------------------
 app = Flask(__name__)
 app.config.from_object(get_config())
 db.init_app(app)
 
 
-# ---------------------------------------------------------------------------
 # Jinja Template Filter (Currency Formatting)
-# ---------------------------------------------------------------------------
+
 @app.template_filter("rand")
 def format_rand(amount):
-    """
-    South African Rand format with non-breaking spaces (e.g., R 8 857.30).
-    """
     if amount is None:
         return "R 0.00"
     return "R" + chr(160) + f"{amount:,.2f}".replace(",", chr(160))
 
-
-# ===========================================================================
 # HTML PAGE ROUTES (Step 1 Frontend & Step 5 Integration)
-# ===========================================================================
 
 @app.route("/")
 def home():
@@ -113,9 +81,7 @@ def sales_flow():
     )
 
 
-# ===========================================================================
-# REST API ENDPOINTS (Step 4 REST API Design)
-# ===========================================================================
+# REST API ENDPOINTS
 
 @app.route("/api/inventory", methods=["GET"])
 def api_inventory():
@@ -288,10 +254,7 @@ def api_advance_order(order_id):
         "waybills": data["waybills"],
     }), 200
 
-
-# ===========================================================================
-# ERROR HANDLING (Rubric B2.5)
-# ===========================================================================
+# ERROR HANDLING
 
 @app.errorhandler(ValueError)
 def handle_bad_input(error):

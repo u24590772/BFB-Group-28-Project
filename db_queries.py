@@ -1,16 +1,3 @@
-"""
-FinFlow Database Operations & Transaction Manager
-=================================================
-BFB 321 - Group 28
-
-Implements repository queries and business logic transactions for Aiven MySQL.
-Follows Rubric:
-- B1.4: Safe parameterized SQL queries (%s placeholders)
-- B2.2: Full CRUD support on Orders (create, read, update)
-- B2.4: Pagination and filtering
-- B2.5: Atomic transactions with SELECT ... FOR UPDATE and rollback on error
-"""
-
 import os
 import random
 import time
@@ -26,10 +13,7 @@ from models.supply_chain import (
     orders_per_year,
     total_annual_cost,
 )
-
-# ---------------------------------------------------------------------------
 # Takealot 7-Stage Sales Flow Configuration
-# ---------------------------------------------------------------------------
 SALES_FLOW_STEPS = [
     {"name": "Takealot PO Created",           "system": "websupplier", "label": "Websupplier", "next": "Confirm PO on Takealot Websupplier"},
     {"name": "Fintr Confirms on Websupplier", "system": "websupplier", "label": "Websupplier", "next": "Create Sales Order on ERPNext"},
@@ -55,10 +39,7 @@ def make_waybills(order_id, quantity):
         for carton in cartons
     ]
 
-
-# ---------------------------------------------------------------------------
 # Inventory Queries & KPI Calculations
-# ---------------------------------------------------------------------------
 
 def get_inventory():
     """
@@ -108,10 +89,7 @@ def get_stock_figures():
         "stock_status": status,
     }
 
-
-# ---------------------------------------------------------------------------
 # Order Retrieval & Enrichment
-# ---------------------------------------------------------------------------
 
 def enrich_order_with_shipping(order, current_stock=None, current_safety=None):
     """
@@ -175,7 +153,7 @@ def enrich_order_with_stage(order):
 
 def list_orders(status_filter=None, channel_filter=None, limit=None, offset=None):
     """
-    Retrieves orders from MySQL with optional filtering and pagination (Rubric B2.4).
+    Retrieves orders from MySQL with optional filtering and pagination.
     Joins with cartons table to attach generated Courier Guy waybills.
     """
     sql = "SELECT * FROM orders WHERE 1=1"
@@ -227,7 +205,7 @@ def list_orders(status_filter=None, channel_filter=None, limit=None, offset=None
 
 def get_order(order_identifier):
     """
-    Retrieves a single order by integer ID or string order_ref (Rubric B2.2).
+    Retrieves a single order by integer ID or string order_ref.
     """
     ident_str = str(order_identifier).strip()
     if ident_str.isdigit():
@@ -252,15 +230,9 @@ def get_order(order_identifier):
     return enrich_order_with_stage(enriched)
 
 
-# ---------------------------------------------------------------------------
-# Order CRUD Operations (Rubric B2.2)
-# ---------------------------------------------------------------------------
+# Order CRUD Operations
 
 def create_order(order_ref, channel, quantity, item_code="FM-2026-CN", step=None):
-    """
-    Creates a new order in MySQL after validating stock reservation (Rubric B2.2).
-    Takealot orders default to step 1; other channels default to step NULL.
-    """
     inv = get_inventory()
     approved, message = check_stock_reservation(quantity, inv["stock_on_hand"], inv["safety_stock"])
     if not approved:
@@ -279,7 +251,7 @@ def create_order(order_ref, channel, quantity, item_code="FM-2026-CN", step=None
 
 def update_order(order_identifier, **fields):
     """
-    Updates mutable fields of an order in MySQL (Rubric B2.2).
+    Updates mutable fields of an order in MySQL.
     Supported fields: quantity, channel, status, step.
     """
     order = get_order(order_identifier)
@@ -310,7 +282,7 @@ def update_order(order_identifier, **fields):
 
 def pack_order_transaction(order_identifier):
     """
-    Atomic packing transaction (Rubric B2.5):
+    Atomic packing transaction:
     1. Lock and read order and inventory rows with FOR UPDATE.
     2. Check stock against safety stock buffer.
     3. Calculate carton breakdown and insert carton rows with Courier Guy waybills.
@@ -404,7 +376,7 @@ def pack_order_transaction(order_identifier):
 
 def advance_order_transaction(order_identifier):
     """
-    Advances a Takealot order to the next step in the 7-stage sales flow (Rubric B3.1).
+    Advances a Takealot order to the next step in the 7-stage sales flow.
     When reaching PACKING_STEP (Step 6), automatically triggers the packing transaction.
     When reaching LAST_STEP (Step 7), marks order as 'Dispatched'.
     """

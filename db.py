@@ -1,15 +1,3 @@
-"""
-FinFlow Database Connection Module
-==================================
-BFB 321 - Group 28
-
-Manages connection lifecycle with Aiven Cloud MySQL.
-Follows Rubric B1.4:
-- Reads credentials from .env via config.py (no hardcoded passwords)
-- Registers app.teardown_appcontext hook to safely close connections per request
-- Enforces parameterized queries (%s placeholders) to prevent SQL injection
-"""
-
 import os
 import pymysql
 import pymysql.cursors

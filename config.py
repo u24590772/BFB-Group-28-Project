@@ -1,13 +1,3 @@
-"""
-FinFlow Configuration Module
-============================
-BFB 321 - Group 28
-
-Provides per-environment configuration classes (Development, Testing, Production)
-as required by Rubric B4.2. Sensitive credentials are read from .env via os.getenv()
-so no secrets are ever committed into source control.
-"""
-
 import os
 from dotenv import load_dotenv
 
@@ -18,7 +8,6 @@ if os.path.exists(env_file):
 
 
 class Config:
-    """Base application configuration."""
     SECRET_KEY = os.getenv("SECRET_KEY", "bfb321-fintr-group28-default-secret-2026")
     DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
     DB_PORT = int(os.getenv("DB_PORT", "3306"))

@@ -1,14 +1,4 @@
 """
-FinFlow Database Initialization Script
-======================================
-BFB 321 - Group 28
-
-Provisions MySQL tables and seeds realistic demo data on Aiven Cloud.
-Follows Rubric B1.3:
-- Builds database from scratch with one command
-- Populates realistic demo records
-- Supports safe teardown with '--reset' flag (children dropped before parents)
-
 Usage:
     python init_db.py          # creates tables and loads seed data if empty
     python init_db.py --reset  # drops existing tables, rebuilds schema, and reseeds
