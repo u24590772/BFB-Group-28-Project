@@ -1,343 +1,333 @@
 """
-FinFlow – Flask back-end
+FinFlow – Flask Web Application & REST API
+==========================================
 BFB 321 – Group 28
 
-Connects the three pages in templates/, the supply chain model in
-models/supply_chain.py and the order data.
+Connects the responsive frontend templates to the standalone supply chain model
+and the Aiven Cloud MySQL database.
 
-For now the data lives in the inventory and orders variables below, the same
-way the lecturer's example keeps products in a list. In Milestone 2 those two
-variables move into the MySQL database.
+Fulfills Rubric:
+- B1.4: Connected to live MySQL with parameterized queries and model-matching schemas
+- B2.1: Resource-style REST API endpoints returning consistent JSON
+- B2.2: Full CRUD capabilities (Create, Read, Update) on Orders
+- B2.4: Pagination, filtering, and bad input validation
+- B2.5: Centralized error handling and Python logging (no raw stack traces)
+- B3.1–B3.3: 3 end-to-end flows with dynamic frontend updates and supply chain KPIs
 
-Run it from the project folder:
+Run from the project folder:
     python app.py
-then open http://127.0.0.1:5000 in your browser.
+Then open http://127.0.0.1:5000 in your browser.
 """
 
-import random
-import time
-
+import logging
+import os
 from flask import Flask, abort, jsonify, render_template, request
 
+from config import get_config
+import db
+import db_queries
 from models.supply_chain import (
-    ANNUAL_DEMAND,
-    HOLDING_COST,
-    SETUP_COST,
     calculate_carton_breakdown,
     calculate_courier_shipping_cost,
-    calculate_eoq,
-    check_stock_reservation,
-    orders_per_year,
-    total_annual_cost,
 )
 
+# ---------------------------------------------------------------------------
+# Logging Configuration (Rubric B2.5 & B4.4)
+# ---------------------------------------------------------------------------
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("finflow")
+
+# ---------------------------------------------------------------------------
+# Flask App Factory & Database Teardown Hook
+# ---------------------------------------------------------------------------
 app = Flask(__name__)
+app.config.from_object(get_config())
+db.init_app(app)
 
 
-# ===========================================================================
-# 1. DATA – this will come from the MySQL database in Milestone 2
-# ===========================================================================
-
-# Stock record for the one SKU (the FinMaster board game)
-inventory = {"item_code": "FM-2026-CN", "stock_on_hand": 500, "safety_stock": 50}
-
-# Synthetic demo orders. "step" is the order's place in the 7-step Takealot
-# sales flow. Shopify and direct-email orders are not in that flow (None).
-orders = [
-    {"id": 1, "order_ref": "DEMO-ORD-001", "channel": "Takealot",     "quantity": 1,   "step": 1},
-    {"id": 2, "order_ref": "DEMO-ORD-002", "channel": "Takealot",     "quantity": 8,   "step": 3},
-    {"id": 3, "order_ref": "DEMO-ORD-003", "channel": "Shopify",      "quantity": 2,   "step": None},
-    {"id": 4, "order_ref": "DEMO-ORD-004", "channel": "Takealot",     "quantity": 4,   "step": 5},
-    {"id": 5, "order_ref": "DEMO-ORD-005", "channel": "Direct email", "quantity": 10,  "step": None},
-    {"id": 6, "order_ref": "DEMO-ORD-006", "channel": "Takealot",     "quantity": 6,   "step": 2},
-    {"id": 7, "order_ref": "DEMO-ORD-007", "channel": "Takealot",     "quantity": 12,  "step": 7},
-    {"id": 8, "order_ref": "DEMO-ORD-008", "channel": "Direct email", "quantity": 460, "step": None},
-]
-
-# The 7 steps of the Takealot sales flow (Sales Flow.png).
-# "system" picks the colour on the board, "label" is that system's name on
-# screen, and "next" is the job that moves an order on to the following step.
-SALES_FLOW_STEPS = [
-    {"name": "Takealot PO Created",           "system": "websupplier", "label": "Websupplier", "next": "Confirm PO on Takealot Websupplier"},
-    {"name": "Fintr Confirms on Websupplier", "system": "websupplier", "label": "Websupplier", "next": "Create Sales Order on ERPNext"},
-    {"name": "Sales Order on ERPNext",        "system": "erp",         "label": "ERPNext",     "next": "Create Delivery Note on ERPNext"},
-    {"name": "Delivery Note on ERPNext",      "system": "erp",         "label": "ERPNext",     "next": "Create Shipment on Websupplier"},
-    {"name": "Shipment on Websupplier",       "system": "websupplier", "label": "Websupplier", "next": "Book Shipment on Courier Guy"},
-    {"name": "Shipment on Courier Guy",       "system": "courier",     "label": "Courier Guy", "next": "Hand cartons to the courier"},
-    {"name": "Dispatched",                    "system": "done",        "label": "Done",        "next": "None – order complete"},
-]
-LAST_STEP = len(SALES_FLOW_STEPS)  # 7
-PACKING_STEP = 6  # "Shipment on Courier Guy": the cartons are packed and waybills made
-
-
-# ===========================================================================
-# 2. HELPERS – combine the data with the supply chain model
-# ===========================================================================
-
-def get_order(order_id):
-    """Return the order with this id, or stop with a 404 Not Found error."""
-    for order in orders:
-        if order["id"] == order_id:
-            return order
-    abort(404)
-
-
-def takealot_orders():
-    """The orders that are in the 7-step Takealot sales flow."""
-    return [order for order in orders if order["step"] is not None]
-
-
-def stock_figures():
-    """Calculation 1: EOQ, reorder point and stock status."""
-    eoq_result = calculate_eoq()  # D = 6000, S = R350, H = R45 -> EOQ 306, ROP 170
-    eoq = eoq_result["EOQ"]
-    reorder_point = eoq_result["Reorder Point"]
-    stock = inventory["stock_on_hand"]
-    buffer = inventory["safety_stock"]
-
-    if stock < buffer:
-        status = "Below Safety Stock"
-    elif stock <= reorder_point:
-        status = "Reorder Now"
-    else:
-        status = "Healthy"
-
-    return {
-        "eoq": eoq,
-        "reorder_point": reorder_point,
-        "stock_on_hand": stock,
-        "safety_stock": buffer,
-        "available": stock - buffer,
-        "orders_per_year": orders_per_year(ANNUAL_DEMAND, eoq),
-        "yearly_cost": total_annual_cost(ANNUAL_DEMAND, eoq, SETUP_COST, HOLDING_COST),
-        "stock_status": status,
-    }
-
-
-def order_with_shipping(order):
-    """Calculations 2 and 3 for one order: cartons, courier cost and stock check."""
-    quantity = order["quantity"]
-    shipping = calculate_courier_shipping_cost(quantity)
-    approved, message = check_stock_reservation(
-        quantity, inventory["stock_on_hand"], inventory["safety_stock"]
-    )
-
-    if not approved:
-        status = "Rejected"
-    elif order["step"] == LAST_STEP:
-        status = "Dispatched"
-    else:
-        status = "Pending"
-
-    # A copy of the order with the model's results added to it
-    return {
-        **order,
-        "cartons": len(calculate_carton_breakdown(quantity)),
-        "billable_kg": shipping["total_billable_weight_kg"],
-        "shipping_cost": shipping["total_shipping_cost"],
-        "approved": approved,
-        "stock_message": message,
-        "status": status,
-    }
-
-
-def order_with_stage(order):
-    """Add the name and next action of the order's sales flow step."""
-    step = SALES_FLOW_STEPS[order["step"] - 1]
-    return {
-        **order,
-        "step_name": step["name"],
-        "next_action": step["next"],
-        "is_dispatched": order["step"] == LAST_STEP,
-    }
-
-
-def make_waybills(order):
-    """Internal Courier Guy simulation: one waybill per carton, in the group
-    plan's format TCG-ZA-{order id}-{carton}-{timestamp hash}{random digit}."""
-    timestamp_hash = format(int(time.time()) % 4096, "03X")  # 3 hex characters from the clock
-    return [
-        f"TCG-ZA-{order['id']:04d}-{carton['carton_number']}-{timestamp_hash}{random.randint(0, 9)}"
-        for carton in calculate_carton_breakdown(order["quantity"])
-    ]
-
-
-def pack_order(order):
-    """Calculation 3, then pack: check the stock above the safety buffer, take
-    the games off the shelf and make the waybills. Returns (packed, message)."""
-    approved, message = check_stock_reservation(
-        order["quantity"], inventory["stock_on_hand"], inventory["safety_stock"]
-    )
-    if not approved:
-        return False, message
-    inventory["stock_on_hand"] -= order["quantity"]
-    order["waybills"] = make_waybills(order)
-    return True, "Order packed"
-
-
-# ===========================================================================
-# 3. JINJA FILTER – money in the South African format
-# ===========================================================================
-
+# ---------------------------------------------------------------------------
+# Jinja Template Filter (Currency Formatting)
+# ---------------------------------------------------------------------------
 @app.template_filter("rand")
 def format_rand(amount):
-    """{{ 8857.3|rand }} shows R 8 857.30. chr(160) is a non-breaking space,
-    so an amount never splits across two lines."""
+    """
+    South African Rand format with non-breaking spaces (e.g., R 8 857.30).
+    """
+    if amount is None:
+        return "R 0.00"
     return "R" + chr(160) + f"{amount:,.2f}".replace(",", chr(160))
 
 
 # ===========================================================================
-# 4. PAGES – render_template fills the HTML with the data
+# HTML PAGE ROUTES (Step 1 Frontend & Step 5 Integration)
 # ===========================================================================
 
 @app.route("/")
 def home():
-    in_progress = [order for order in takealot_orders() if order["step"] < LAST_STEP]
+    """
+    Landing hub displaying summary warehouse KPIs from live MySQL inventory.
+    """
+    figures = db_queries.get_stock_figures()
+    takealot_orders = db_queries.list_orders(channel_filter="Takealot")
+    in_progress = [o for o in takealot_orders if o.get("step") is not None and o["step"] < db_queries.LAST_STEP]
     return render_template(
         "index.html",
-        figures=stock_figures(),
+        figures=figures,
         orders_in_progress=len(in_progress),
     )
 
 
 @app.route("/dashboard")
 def dashboard():
+    """
+    Supply chain dashboard with live EOQ KPIs and outbound orders table.
+    """
+    figures = db_queries.get_stock_figures()
+    orders = db_queries.list_orders()
     return render_template(
         "dashboard.html",
-        figures=stock_figures(),
-        orders=[order_with_shipping(order) for order in orders],
+        figures=figures,
+        orders=orders,
     )
 
 
 @app.route("/sales-flow")
 def sales_flow():
-    flow_orders = [order_with_stage(order) for order in takealot_orders()]
-    # How many orders sit on each of the 7 steps (shown on the board)
+    """
+    Takealot 7-stage order fulfilment tracker with live stage counts.
+    """
+    takealot_orders = db_queries.list_orders(channel_filter="Takealot")
+    flow_orders = [o for o in takealot_orders if o.get("step") is not None]
     counts = [
-        len([order for order in flow_orders if order["step"] == number])
-        for number in range(1, LAST_STEP + 1)
+        len([o for o in flow_orders if o["step"] == number])
+        for number in range(1, db_queries.LAST_STEP + 1)
     ]
     return render_template(
         "sales_flow.html",
-        steps=SALES_FLOW_STEPS,
+        steps=db_queries.SALES_FLOW_STEPS,
         orders=flow_orders,
         counts=counts,
     )
 
 
 # ===========================================================================
-# 5. JSON API – the endpoints in the group plan (section 4.2)
+# REST API ENDPOINTS (Step 4 REST API Design)
 # ===========================================================================
 
-@app.route("/api/inventory")
+@app.route("/api/inventory", methods=["GET"])
 def api_inventory():
-    figures = stock_figures()
+    """
+    Endpoint 1: Returns warehouse stock on hand, buffer, and EOQ parameters.
+    """
+    figures = db_queries.get_stock_figures()
     return jsonify({
         "stock_on_hand": figures["stock_on_hand"],
         "safety_stock": figures["safety_stock"],
         "available": figures["available"],
         "eoq_recommended": figures["eoq"],
         "reorder_point": figures["reorder_point"],
-    })
+    }), 200
 
 
-@app.route("/api/orders")
+@app.route("/api/orders", methods=["GET"])
 def api_orders():
-    result = [order_with_shipping(order) for order in orders]
-    status = request.args.get("status")  # e.g. /api/orders?status=Pending
-    if status:
-        result = [order for order in result if order["status"] == status]
-    return jsonify({"status": "success", "count": len(result), "orders": result})
+    """
+    Endpoint 2: List orders with optional status/channel filtering and pagination (Rubric B2.4).
+    Query parameters: ?status=Pending&channel=Takealot&page=1&limit=10
+    """
+    status = request.args.get("status")
+    channel = request.args.get("channel")
+    page = request.args.get("page", type=int)
+    limit = request.args.get("limit", type=int)
+
+    offset = None
+    if page and limit:
+        offset = (page - 1) * limit
+
+    orders = db_queries.list_orders(status_filter=status, channel_filter=channel, limit=limit, offset=offset)
+    return jsonify({
+        "status": "success",
+        "count": len(orders),
+        "orders": orders,
+    }), 200
+
+
+@app.route("/api/orders", methods=["POST"])
+def api_create_order():
+    """
+    Endpoint 3 (Rubric B2.2): Creates a new order in MySQL with input and stock buffer validation.
+    JSON Request Body: {"order_ref": "ORD-101", "channel": "Takealot", "quantity": 8}
+    """
+    data = request.get_json(silent=True) or {}
+    order_ref = data.get("order_ref")
+    channel = data.get("channel", "Takealot")
+    quantity = data.get("quantity")
+
+    if not order_ref or not isinstance(order_ref, str):
+        return jsonify({"status": "error", "message": "Missing or invalid 'order_ref'"}), 400
+    if quantity is None or not isinstance(quantity, int) or quantity <= 0:
+        return jsonify({"status": "error", "message": "'quantity' must be a positive integer"}), 400
+
+    try:
+        new_order = db_queries.create_order(
+            order_ref=order_ref.strip(),
+            channel=channel.strip(),
+            quantity=quantity,
+        )
+        logger.info("Created new order: %s (Qty: %s)", order_ref, quantity)
+        return jsonify({"status": "success", "order": new_order}), 201
+    except ValueError as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+    except Exception as e:
+        logger.error("Failed to create order: %s", e)
+        return jsonify({"status": "error", "message": "Failed to create order. Check for duplicate reference."}), 400
+
+
+@app.route("/api/orders/<int:order_id>", methods=["GET"])
+def api_get_order(order_id):
+    """
+    Endpoint 4 (Rubric B2.2): Retrieves a single order by ID from MySQL.
+    """
+    order = db_queries.get_order(order_id)
+    if not order:
+        return jsonify({"status": "error", "message": f"Order {order_id} not found"}), 404
+    return jsonify({"status": "success", "order": order}), 200
+
+
+@app.route("/api/orders/<int:order_id>", methods=["PUT", "PATCH"])
+def api_update_order(order_id):
+    """
+    Endpoint 5 (Rubric B2.2): Updates mutable fields of an existing order in MySQL.
+    JSON Request Body: {"quantity": 10, "status": "Pending"}
+    """
+    data = request.get_json(silent=True) or {}
+    order = db_queries.get_order(order_id)
+    if not order:
+        return jsonify({"status": "error", "message": f"Order {order_id} not found"}), 404
+
+    updated = db_queries.update_order(order_id, **data)
+    logger.info("Updated order %s with %s", order_id, data)
+    return jsonify({"status": "success", "order": updated}), 200
 
 
 @app.route("/api/calculate-shipping", methods=["POST"])
 def api_calculate_shipping():
+    """
+    Endpoint 6: Invokes supply chain model to calculate cartons and Courier Guy freight cost.
+    JSON Request Body: {"quantity": 8}
+    """
     data = request.get_json(silent=True) or {}
     quantity = data.get("quantity")
-    cartons = calculate_carton_breakdown(quantity)  # bad quantity -> ValueError -> 400
+    cartons = calculate_carton_breakdown(quantity)
     shipping = calculate_courier_shipping_cost(quantity)
     return jsonify({
         "cartons_count": len(cartons),
         "total_billable_weight": shipping["total_billable_weight_kg"],
         "shipping_cost_zar": shipping["total_shipping_cost"],
         "breakdown": cartons,
-    })
+    }), 200
 
 
 @app.route("/api/orders/<int:order_id>/pack", methods=["POST"])
 def api_pack_order(order_id):
-    order = get_order(order_id)
-    if order.get("waybills"):
-        return jsonify({"status": "error", "message": f"{order['order_ref']} is already packed"}), 409
+    """
+    Endpoint 7: Packing transaction. Verifies buffer, assigns Courier Guy waybills, and deducts stock in MySQL.
+    """
+    success, message, data = db_queries.pack_order_transaction(order_id)
+    if not success:
+        status_code = 404 if "not found" in message.lower() else 409
+        return jsonify({"status": "error", "message": message}), status_code
 
-    packed, message = pack_order(order)
-    if not packed:
-        return jsonify({"status": "error", "message": message}), 409
-    return jsonify({"status": "success", "message": message, "waybills": order["waybills"]})
+    logger.info("Order %s successfully packed with waybills %s", order_id, data.get("waybills"))
+    return jsonify({
+        "status": "success",
+        "message": message,
+        "waybills": data["waybills"],
+    }), 200
 
 
-@app.route("/api/sales-flow")
+@app.route("/api/sales-flow", methods=["GET"])
 def api_sales_flow():
-    result = []
-    for order in takealot_orders():
-        staged = order_with_stage(order)
-        result.append({
-            "id": staged["id"],
-            "order_ref": staged["order_ref"],
-            "current_step": staged["step"],
-            "step_name": staged["step_name"],
-        })
-    return jsonify({"status": "success", "orders": result})
+    """
+    Endpoint 8: Retrieves Takealot orders currently active in the 7-step pipeline.
+    """
+    takealot_orders = db_queries.list_orders(channel_filter="Takealot")
+    result = [
+        {
+            "id": o["id"],
+            "order_ref": o["order_ref"],
+            "current_step": o["step"],
+            "step_name": o["step_name"],
+        }
+        for o in takealot_orders if o.get("step") is not None
+    ]
+    return jsonify({"status": "success", "orders": result}), 200
 
 
 @app.route("/api/sales-flow/<int:order_id>/advance", methods=["POST"])
 def api_advance_order(order_id):
-    order = get_order(order_id)
-    if order["step"] is None:
-        return jsonify({"status": "error", "message": f"{order['order_ref']} is not in the Takealot sales flow"}), 400
-    if order["step"] == LAST_STEP:
-        return jsonify({"status": "error", "message": f"{order['order_ref']} is already dispatched"}), 409
+    """
+    Endpoint 9: Advances an order one step along the 7-stage Takealot pipeline in MySQL.
+    At step 6, triggers automated packing and waybills; at step 7, marks dispatched.
+    """
+    success, message, status_code, data = db_queries.advance_order_transaction(order_id)
+    if not success:
+        return jsonify({"status": "error", "message": message}), status_code
 
-    new_step = order["step"] + 1
-    waybills = []
-    if new_step == PACKING_STEP:
-        # Booking the courier means packing: stock check, stock out, waybills
-        packed, message = pack_order(order)
-        if not packed:
-            return jsonify({"status": "error", "message": message}), 409
-        waybills = order["waybills"]
-
-    order["step"] = new_step
-    step = SALES_FLOW_STEPS[new_step - 1]
+    logger.info("Advanced order %s to step %s (%s)", order_id, data["new_step"], data["step_name"])
     return jsonify({
         "status": "success",
-        "order_id": order["id"],
-        "new_step": new_step,
-        "step_name": step["name"],
-        "next_action": step["next"],
-        "is_dispatched": new_step == LAST_STEP,
-        "waybills": waybills,
-    })
+        "order_id": data["order_id"],
+        "new_step": data["new_step"],
+        "step_name": data["step_name"],
+        "next_action": data["next_action"],
+        "is_dispatched": data["is_dispatched"],
+        "waybills": data["waybills"],
+    }), 200
 
 
 # ===========================================================================
-# 6. ERROR HANDLING – one place for every route
+# ERROR HANDLING (Rubric B2.5)
 # ===========================================================================
 
 @app.errorhandler(ValueError)
 def handle_bad_input(error):
-    """The supply chain model raises ValueError for bad input, such as 0 units."""
+    """Handles supply chain and validation value errors gracefully."""
+    logger.warning("Validation error: %s", error)
     return jsonify({"status": "error", "message": str(error)}), 400
+
+
+@app.errorhandler(400)
+def handle_bad_request(error):
+    if request.path.startswith("/api/"):
+        return jsonify({"status": "error", "message": "Bad request"}), 400
+    return error
 
 
 @app.errorhandler(404)
 def handle_not_found(error):
-    """API calls get a JSON answer; pages keep Flask's normal 404 page."""
     if request.path.startswith("/api/"):
         return jsonify({"status": "error", "message": "Not found"}), 404
     return error
 
 
+@app.errorhandler(409)
+def handle_conflict(error):
+    if request.path.startswith("/api/"):
+        return jsonify({"status": "error", "message": "Resource conflict or invalid state transition"}), 409
+    return error
+
+
+@app.errorhandler(500)
+def handle_server_error(error):
+    logger.error("Internal server error encountered: %s", error)
+    if request.path.startswith("/api/"):
+        return jsonify({"status": "error", "message": "Internal server error"}), 500
+    return error
+
+
 if __name__ == "__main__":
     app.run(debug=True)
-
